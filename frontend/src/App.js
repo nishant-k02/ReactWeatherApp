@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { DateRangePicker } from 'react-date-range';
-import 'react-date-range/dist/styles.css'; // main css file
-import 'react-date-range/dist/theme/default.css'; // theme css file
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
+import './App.css';
 
 const App = () => {
   const [location, setLocation] = useState('');
@@ -39,59 +40,82 @@ const App = () => {
   const handleSearch = async () => {
     try {
       const response = await axios.get(`http://localhost:5000/api/weather/${location}`);
-      console.log('Current Weather Data:', response.data);
       setWeatherDetails(response.data);
-      setTemperature(response.data.main.temp); // Set temperature field with fetched data
+      setTemperature(response.data.main.temp);
     } catch (error) {
       console.error('Error fetching weather data:', error);
     }
   };
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h1>Add Temperature Data</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Enter location..."
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          required
-        />
-        <input
-          type="number"
-          placeholder="Enter temperature..."
-          value={temperature}
-          onChange={(e) => setTemperature(e.target.value)}
-          required
-        />
-        <DateRangePicker
-          ranges={dateRange}
-          onChange={handleDateChange}
-        />
-        <button type="submit">Add Temperature Data</button>
-      </form>
-
-      <div>
-        <h2>Search Current Weather</h2>
-        <input
-          type="text"
-          placeholder="Enter location..."
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
-        <button onClick={handleSearch}>Search Weather</button>
-      </div>
-
-      {weatherDetails && (
-        <div>
-          <h3>Weather Details for {weatherDetails.name}, {weatherDetails.sys.country}:</h3>
-          <p><strong>Temperature:</strong> {weatherDetails.main.temp}°C</p>
-          <p><strong>Weather:</strong> {weatherDetails.weather[0].description}</p>
-          <p><strong>Humidity:</strong> {weatherDetails.main.humidity}%</p>
-          <p><strong>Wind Speed:</strong> {weatherDetails.wind.speed} m/s</p>
+    <div className="app-container">
+      <h1 className="app-title">Weather App</h1>
+      <div className="content-container">
+        <div className="left-section">
+        <h2 className="input-title">Add Temperature Data</h2>
+          <div className="input-group">
+            <input
+              type="text"
+              placeholder="Enter location..."
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required
+              className="input-field"
+            />
+            <input
+              type="number"
+              placeholder="Enter temperature..."
+              value={temperature}
+              onChange={(e) => setTemperature(e.target.value)}
+              required
+              className="input-field"
+            />
+          </div>
+          <button type="submit" onClick={handleSubmit} className="submit-button">
+            Add Temperature Data
+          </button>
+          <DateRangePicker
+            ranges={dateRange}
+            onChange={handleDateChange}
+            className="date-picker"
+          />
         </div>
-      )}
+        <div className="right-section">
+        <h2 className="input-title">Search Weather</h2>
+          <div className="input-group">
+            <input
+              type="text"
+              placeholder="Enter location..."
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required
+              className="input-field"
+            />
+            <button onClick={handleSearch} className="search-button">
+              Search Weather
+            </button>
+          </div>
+          {weatherDetails && (
+            <div className="weather-card">
+              <div className="weather-location">
+                {weatherDetails.name}, {weatherDetails.sys.country}
+              </div>
+              <div className="weather-temperature">
+                Temperature: {weatherDetails.main.temp}°C
+              </div>
+              <div className="weather-description">
+                Weather: {weatherDetails.weather[0].description}
+              </div>
+              <div className="weather-humidity">
+                Humidity: {weatherDetails.main.humidity}%
+              </div>
+              <div className="weather-wind-speed">
+                Wind Speed: {weatherDetails.wind.speed} m/s
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
