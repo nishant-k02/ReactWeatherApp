@@ -32,6 +32,8 @@ const App = () => {
         endDate,
       });
       alert('Temperature data added successfully!');
+      setLocation('');
+      setTemperature('');
     } catch (error) {
       console.error('Error adding temperature data:', error);
     }
@@ -47,12 +49,40 @@ const App = () => {
     }
   };
 
+  const fetchWeatherByCoordinates = async (lat, lon) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/weather?lat=${lat}&lon=${lon}`);
+      setWeatherDetails(response.data);
+      setTemperature(response.data.main.temp);
+      setLocation(response.data.name); // Update the location field in the left section
+    } catch (error) {
+      console.error('Error fetching weather data by coordinates:', error);
+    }
+  };
+
+  const handleGetCurrentLocationWeather = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          fetchWeatherByCoordinates(latitude, longitude);
+          setLocation(''); // Clear the location field in the right section
+        },
+        (error) => {
+          console.error('Error getting geolocation:', error);
+        }
+      );
+    } else {
+      alert('Geolocation is not supported by this browser.');
+    }
+  };
+
   return (
     <div className="app-container">
       <h1 className="app-title">Weather App</h1>
       <div className="content-container">
         <div className="left-section">
-        <h2 className="input-title">Add Temperature Data</h2>
+          <h2 className="input-title">Add Temperature Data</h2>
           <div className="input-group">
             <input
               type="text"
@@ -60,6 +90,7 @@ const App = () => {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               required
+              title="Location is required"
               className="input-field"
             />
             <input
@@ -68,10 +99,16 @@ const App = () => {
               value={temperature}
               onChange={(e) => setTemperature(e.target.value)}
               required
+              title="Temperature is required"
               className="input-field"
             />
           </div>
-          <button type="submit" onClick={handleSubmit} className="submit-button">
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className="submit-button"
+            disabled={!location || !temperature}
+          >
             Add Temperature Data
           </button>
           <DateRangePicker
@@ -81,7 +118,7 @@ const App = () => {
           />
         </div>
         <div className="right-section">
-        <h2 className="input-title">Search Weather</h2>
+          <h2 className="input-title">Search Weather</h2>
           <div className="input-group">
             <input
               type="text"
@@ -89,12 +126,24 @@ const App = () => {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               required
+              title="Location is required"
               className="input-field"
             />
-            <button onClick={handleSearch} className="search-button">
+            <button
+              onClick={handleSearch}
+              className="search-button"
+              disabled={!location}
+            >
               Search Weather
             </button>
+            <button
+              onClick={handleGetCurrentLocationWeather}
+              className="current-location-button"
+            >
+              Get Current Location Weather
+            </button>
           </div>
+
           {weatherDetails && (
             <div className="weather-card">
               <div className="weather-location">

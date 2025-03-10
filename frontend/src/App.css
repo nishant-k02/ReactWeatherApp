@@ -59,7 +59,7 @@ body {
   margin-top: 10px;
 }
 
-.submit-button, .search-button {
+.submit-button, .search-button, .current-location-button {
   padding: 12px 24px;
   font-size: 1rem;
   border: none;
