@@ -7,8 +7,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  margin-top: 10%;
 }
+
 
 .app-container {
   width: 100%;
@@ -21,11 +22,11 @@ body {
   font-size: 2.5rem;
   margin-bottom: 20px;
   color: #4682b4;
-  margin-top: 0%;
+  margin-top: -15%;
   margin-bottom: 30px;
 }
 
-.input-title {
+.input-title, h3 {
   text-align: center;
   color: #4682b4;
 }
@@ -57,9 +58,10 @@ body {
 
 .date-picker {
   margin-top: 10px;
+  border: 1px solid black;
 }
 
-.submit-button, .search-button, .current-location-button, .forecast-button {
+.submit-button, .search-button, .current-location-button, .forecast-button, .history-button {
   padding: 12px 24px;
   font-size: 1rem;
   border: none;
@@ -68,6 +70,14 @@ body {
   color: #fff;
   cursor: pointer;
   transition: background-color 0.3s ease;
+}
+.submit-button{
+  margin-left: 170px;
+  margin-bottom: 10px;
+}
+.history-button{
+  margin-top: 20px;
+  margin-left: 170px;
 }
 
 .submit-button:hover, .search-button:hover, .current-location-button:hover, .forecast-button:hover {
@@ -183,3 +193,25 @@ body {
 }
 
 
+.weather-history {
+  margin-top: 20px;
+}
+
+.weather-history table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.weather-history th, .weather-history td {
+  border: 1px solid black;
+  padding: 8px;
+  text-align: left;
+}
+
+.weather-history th {
+  background-color: #cceeff;
+}
+
+.weather-history tr:nth-child(even) {
+  background-color: #cceeff;
+}

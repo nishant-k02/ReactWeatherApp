@@ -89,6 +89,20 @@ app.post('/api/temperature', (req, res) => {
   });
 });
 
+app.get('/api/weather-history', (req, res) => {
+  const query = 'SELECT * FROM temperature_data ORDER BY start_date DESC LIMIT 100';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching weather history:', err);
+      res.status(500).json({ error: 'Failed to fetch weather history' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
