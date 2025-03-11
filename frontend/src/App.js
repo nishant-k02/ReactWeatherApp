@@ -16,6 +16,7 @@ const App = () => {
     },
   ]);
   const [weatherDetails, setWeatherDetails] = useState(null);
+  const [forecastDetails, setForecastDetails] = useState(null);
 
   const handleDateChange = (ranges) => {
     setDateRange([ranges.selection]);
@@ -41,13 +42,18 @@ const App = () => {
 
   const handleSearch = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/weather/${location}`);
-      setWeatherDetails(response.data);
-      setTemperature(response.data.main.temp);
+      const weatherResponse = await axios.get(`http://localhost:5000/api/weather/${location}`);
+      setWeatherDetails(weatherResponse.data);
+      setTemperature(weatherResponse.data.main.temp);
+  
+      // Fetch forecast data
+      const forecastResponse = await axios.get(`http://localhost:5000/api/forecast/${location}`);
+      setForecastDetails(forecastResponse.data);
     } catch (error) {
       console.error('Error fetching weather data:', error);
     }
   };
+  
 
   const fetchWeatherByCoordinates = async (lat, lon) => {
     try {
@@ -76,6 +82,20 @@ const App = () => {
       alert('Geolocation is not supported by this browser.');
     }
   };
+
+  const handleFetchForecast = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/forecast/${location}`);
+      setForecastDetails(response.data);
+    } catch (error) {
+      console.error('Error fetching forecast data:', error);
+    }
+  };
+
+  const getWeatherIconUrl = (iconCode) => {
+    return `http://openweathermap.org/img/wn/${iconCode}@2x.png`;
+  };
+  
 
   return (
     <div className="app-container">
@@ -140,7 +160,14 @@ const App = () => {
               onClick={handleGetCurrentLocationWeather}
               className="current-location-button"
             >
-              Get Current Location Weather
+              Current Location 
+            </button>
+            <button
+              onClick={handleFetchForecast}
+              className="forecast-button"
+              disabled={!location}
+            >
+              5-Day Forecast
             </button>
           </div>
 
@@ -149,11 +176,18 @@ const App = () => {
               <div className="weather-location">
                 {weatherDetails.name}, {weatherDetails.sys.country}
               </div>
+              <div className="weather-icon-description">
+                <img 
+                  src={getWeatherIconUrl(weatherDetails.weather[0].icon)} 
+                  alt={weatherDetails.weather[0].description}
+                  className="weather-icon"
+                />
+                <span className="weather-description">
+                  {weatherDetails.weather[0].description}
+                </span>
+              </div>
               <div className="weather-temperature">
                 Temperature: {weatherDetails.main.temp}°C
-              </div>
-              <div className="weather-description">
-                Weather: {weatherDetails.weather[0].description}
               </div>
               <div className="weather-humidity">
                 Humidity: {weatherDetails.main.humidity}%
@@ -162,7 +196,44 @@ const App = () => {
                 Wind Speed: {weatherDetails.wind.speed} m/s
               </div>
             </div>
-          )}
+        )}
+
+
+{forecastDetails && (
+  <div className="forecast-container">
+    <h3 className="forecast-title">5-Day Forecast for {weatherDetails.name}</h3>
+    <div className="forecast-cards">
+      {forecastDetails.map((forecast, index) => (
+        <div key={index} className="forecast-card">
+          <div className="forecast-date">
+            {new Date(forecast.dt_txt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+          </div>
+          <div className="forecast-icon-description">
+            <img 
+              src={getWeatherIconUrl(forecast.weather[0].icon)} 
+              alt={forecast.weather[0].description}
+              className="forecast-icon"
+            />
+            <span className="forecast-description">
+              {forecast.weather[0].description}
+            </span>
+          </div>
+          <div className="forecast-temperature">
+            Temperature: {Math.round(forecast.main.temp)}°C
+          </div>
+          <div className="forecast-humidity">
+            Humidity: {forecast.main.humidity}%
+          </div>
+          <div className="forecast-wind-speed">
+            Wind: {forecast.wind.speed} m/s
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+
         </div>
       </div>
     </div>

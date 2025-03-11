@@ -57,6 +57,23 @@ app.get('/api/weather', async (req, res) => {
   }
 });
 
+// Fetch 5-Day Weather Forecast by City Name
+app.get('/api/forecast/:location', async (req, res) => {
+  const location = req.params.location;
+  const API_KEY = process.env.WEATHER_API_KEY;
+  const url = `https://api.openweathermap.org/data/2.5/forecast?q=${location}&units=metric&cnt=40&appid=${API_KEY}`;
+
+  try {
+    const response = await axios.get(url);
+    // Process forecast data to get daily forecasts
+    const forecastData = response.data.list.filter((item, index) => index % 8 === 0);
+    res.json(forecastData);
+  } catch (error) {
+    console.error('Error fetching forecast data:', error);
+    res.status(500).json({ error: 'Failed to fetch forecast data' });
+  }
+});
+
 // Insert Temperature Data with Date Range
 app.post('/api/temperature', (req, res) => {
   const { location, temperature, startDate, endDate } = req.body;
