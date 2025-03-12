@@ -9,6 +9,7 @@ const App = () => {
   const [location, setLocation] = useState('');
   const [temperature, setTemperature] = useState('');
   const [weatherHistory, setWeatherHistory] = useState([]);
+  const [selectedEntry, setSelectedEntry] = useState(null);
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -26,20 +27,47 @@ const App = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { startDate, endDate } = dateRange[0];
+  
+    // Validate input
+    if (!location.trim()) {
+      alert('Please enter a valid location.');
+      return;
+    }
+    if (isNaN(temperature) || temperature === '') {
+      alert('Please enter a valid temperature.');
+      return;
+    }
+  
     try {
-      await axios.post('http://localhost:5000/api/temperature', {
-        location,
-        temperature,
-        startDate,
-        endDate,
-      });
-      alert('Temperature data added successfully!');
+      if (selectedEntry) {
+        // Update existing entry
+        await axios.put(`http://localhost:5000/api/temperature/${selectedEntry.id}`, {
+          location,
+          temperature,
+          startDate,
+          endDate,
+        });
+        alert('Temperature data updated successfully!');
+      } else {
+        // Add new entry
+        await axios.post('http://localhost:5000/api/temperature', {
+          location,
+          temperature,
+          startDate,
+          endDate,
+        });
+        alert('Temperature data added successfully!');
+      }
       setLocation('');
       setTemperature('');
+      setSelectedEntry(null);
+      fetchWeatherHistory(); // Refresh the weather history
     } catch (error) {
-      console.error('Error adding temperature data:', error);
+      console.error('Error submitting temperature data:', error);
+      alert('Failed to submit temperature data. Please try again.');
     }
   };
+  
 
   const handleSearch = async () => {
     try {
@@ -105,8 +133,21 @@ const App = () => {
       console.error('Error fetching weather history:', error);
     }
   };
-  
 
+  // update record function
+  const handleSelectEntry = (entry) => {
+    setSelectedEntry(entry);
+    setLocation(entry.location);
+    setTemperature(entry.temperature);
+    setDateRange([
+      {
+        startDate: new Date(entry.start_date),
+        endDate: new Date(entry.end_date),
+        key: 'selection',
+      },
+    ]);
+  };
+  
   return (
     <div className="app-container">
       <h1 className="app-title">Weather App</h1>
@@ -138,9 +179,10 @@ const App = () => {
             onClick={handleSubmit}
             className="submit-button"
             disabled={!location || !temperature}
-          >
-            Add Temperature Data
-          </button>
+        >
+          {selectedEntry ? 'Update Temperature Data' : 'Add Temperature Data'}
+        </button>
+
       
           <DateRangePicker
             ranges={dateRange}
@@ -161,17 +203,21 @@ const App = () => {
                   <th>Temperature</th>
                   <th>Start Date</th>
                   <th>End Date</th>
+                  <th>Update Records</th>
                 </tr>
               </thead>
               <tbody>
-                {weatherHistory.map((entry, index) => (
-                  <tr key={index}>
-                    <td>{entry.location}</td>
-                    <td>{entry.temperature}°C</td>
-                    <td>{new Date(entry.start_date).toLocaleDateString()}</td>
-                    <td>{new Date(entry.end_date).toLocaleDateString()}</td>
-                  </tr>
-                ))}
+              {weatherHistory.map((entry, index) => (
+                <tr key={index}>
+                  <td>{entry.location}</td>
+                  <td>{entry.temperature}°C</td>
+                  <td>{new Date(entry.start_date).toLocaleDateString()}</td>
+                  <td>{new Date(entry.end_date).toLocaleDateString()}</td>
+                  <td>
+                    <button onClick={() => handleSelectEntry(entry)} className="update-button">Update</button>
+                  </td>
+                </tr>
+              ))}
               </tbody>
             </table>
           </div>

@@ -89,6 +89,8 @@ app.post('/api/temperature', (req, res) => {
   });
 });
 
+// Fetch Weather History from database
+
 app.get('/api/weather-history', (req, res) => {
   const query = 'SELECT * FROM temperature_data ORDER BY start_date DESC LIMIT 100';
   db.query(query, (err, results) => {
@@ -101,7 +103,22 @@ app.get('/api/weather-history', (req, res) => {
   });
 });
 
+// update weather records present in database
+// Update Temperature Data
+app.put('/api/temperature/:id', (req, res) => {
+  const { id } = req.params;
+  const { location, temperature, startDate, endDate } = req.body;
 
+  const query = 'UPDATE temperature_data SET location = ?, temperature = ?, start_date = ?, end_date = ? WHERE id = ?';
+  db.query(query, [location, temperature, new Date(startDate), new Date(endDate), id], (err) => {
+    if (err) {
+      console.error('Error updating data:', err);
+      res.status(500).json({ error: 'Failed to update data' });
+    } else {
+      res.json({ message: 'Data updated successfully' });
+    }
+  });
+});
 
 // Start the server
 app.listen(PORT, () => {

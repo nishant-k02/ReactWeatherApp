@@ -22,8 +22,8 @@ body {
   font-size: 2.5rem;
   margin-bottom: 20px;
   color: #4682b4;
-  margin-top: -15%;
-  margin-bottom: 30px;
+  margin-top: -13%;
+  margin-bottom: 10px;
 }
 
 .input-title, h3 {
@@ -54,6 +54,7 @@ body {
   border: 1px solid #ccc;
   border-radius: 5px;
   width: 200px;
+  margin-left: 40px;
 }
 
 .date-picker {
@@ -75,12 +76,23 @@ body {
   margin-left: 170px;
   margin-bottom: 10px;
 }
+.update-button{
+  margin-left: 33px;
+  padding: 5px 10px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #4682b4;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
 .history-button{
   margin-top: 20px;
   margin-left: 170px;
 }
 
-.submit-button:hover, .search-button:hover, .current-location-button:hover, .forecast-button:hover {
+.submit-button:hover, .search-button:hover, .current-location-button:hover, .forecast-button:hover, .history-button:hover, .update-button:hover {
   background-color: #5f9ea0;
 }
 
