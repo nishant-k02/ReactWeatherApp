@@ -120,6 +120,20 @@ app.put('/api/temperature/:id', (req, res) => {
   });
 });
 
+app.delete('/api/temperature/:id', (req, res) => {
+  const { id } = req.params;
+  const query = 'DELETE FROM temperature_data WHERE id = ?';
+  db.query(query, [id], (err) => {
+    if (err) {
+      console.error('Error deleting data:', err);
+      res.status(500).json({ error: 'Failed to delete data' });
+    } else {
+      res.json({ message: 'Data deleted successfully' });
+    }
+  });
+});
+
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
