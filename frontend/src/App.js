@@ -10,6 +10,8 @@ const App = () => {
   const [temperature, setTemperature] = useState('');
   const [weatherHistory, setWeatherHistory] = useState([]);
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [showRecords, setShowRecords] = useState(false);
+
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -38,9 +40,22 @@ const App = () => {
       return;
     }
   
+    // Check if updating without changes
+    if (selectedEntry) {
+      const isSameLocation = selectedEntry.location === location;
+      const isSameTemp = selectedEntry.temperature === parseFloat(temperature);
+      const isSameStart = new Date(selectedEntry.start_date).getTime() === startDate.getTime();
+      const isSameEnd = new Date(selectedEntry.end_date).getTime() === endDate.getTime();
+      
+      if (isSameLocation && isSameTemp && isSameStart && isSameEnd) {
+        alert('No changes detected. Update canceled.');
+        resetForm();
+        return;
+      }
+    }
+  
     try {
       if (selectedEntry) {
-        // Update existing entry
         await axios.put(`http://localhost:5000/api/temperature/${selectedEntry.id}`, {
           location,
           temperature,
@@ -49,7 +64,6 @@ const App = () => {
         });
         alert('Temperature data updated successfully!');
       } else {
-        // Add new entry
         await axios.post('http://localhost:5000/api/temperature', {
           location,
           temperature,
@@ -58,24 +72,29 @@ const App = () => {
         });
         alert('Temperature data added successfully!');
       }
-      setLocation('');
-      setTemperature('');
-      setSelectedEntry(null);
-      fetchWeatherHistory(); // Refresh the weather history
+      resetForm();
+      fetchWeatherHistory();
     } catch (error) {
       console.error('Error submitting temperature data:', error);
       alert('Failed to submit temperature data. Please try again.');
     }
   };
   
+  
 
   const handleSearch = async () => {
     try {
       const weatherResponse = await axios.get(`http://localhost:5000/api/weather/${location}`);
       setWeatherDetails(weatherResponse.data);
-      setTemperature(weatherResponse.data.main.temp);
+      setTemperature(weatherResponse.data.main.temp.toString());
+      setLocation(weatherResponse.data.name);
+      setDateRange([{
+        startDate: new Date(),
+        endDate: new Date(),
+        key: 'selection',
+      }]);
+      setSelectedEntry(null);
   
-      // Fetch forecast data
       const forecastResponse = await axios.get(`http://localhost:5000/api/forecast/${location}`);
       setForecastDetails(forecastResponse.data);
     } catch (error) {
@@ -83,17 +102,25 @@ const App = () => {
     }
   };
   
-
+  
   const fetchWeatherByCoordinates = async (lat, lon) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/weather?lat=${lat}&lon=${lon}`);
       setWeatherDetails(response.data);
-      setTemperature(response.data.main.temp);
-      setLocation(response.data.name); // Update the location field in the left section
+      setTemperature(response.data.main.temp.toString());
+      setLocation(response.data.name);
+      setDateRange([{
+        startDate: new Date(),
+        endDate: new Date(),
+        key: 'selection',
+      }]);
+      setSelectedEntry(null);
     } catch (error) {
       console.error('Error fetching weather data by coordinates:', error);
     }
   };
+  
+  
 
   const handleGetCurrentLocationWeather = () => {
     if (navigator.geolocation) {
@@ -101,7 +128,6 @@ const App = () => {
         (position) => {
           const { latitude, longitude } = position.coords;
           fetchWeatherByCoordinates(latitude, longitude);
-          setLocation(''); // Clear the location field in the right section
         },
         (error) => {
           console.error('Error getting geolocation:', error);
@@ -111,7 +137,7 @@ const App = () => {
       alert('Geolocation is not supported by this browser.');
     }
   };
-
+  
   const handleFetchForecast = async () => {
     try {
       const response = await axios.get(`http://localhost:5000/api/forecast/${location}`);
@@ -126,13 +152,17 @@ const App = () => {
   };
 
   const fetchWeatherHistory = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/weather-history');
-      setWeatherHistory(response.data);
-    } catch (error) {
-      console.error('Error fetching weather history:', error);
+    if (!showRecords) {
+      try {
+        const response = await axios.get('http://localhost:5000/api/weather-history');
+        setWeatherHistory(response.data);
+      } catch (error) {
+        console.error('Error fetching weather history:', error);
+      }
     }
+    setShowRecords(!showRecords);
   };
+  
 
   // update record function
   const handleSelectEntry = (entry) => {
@@ -147,7 +177,34 @@ const App = () => {
       },
     ]);
   };
+
+  //reset update form
+  const resetForm = () => {
+    setSelectedEntry(null);
+    setLocation('');
+    setTemperature('');
+    setDateRange([{
+      startDate: new Date(),
+      endDate: new Date(),
+      key: 'selection',
+    }]);
+  };
   
+
+  //delete record function
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      try {
+        await axios.delete(`http://localhost:5000/api/temperature/${id}`);
+        fetchWeatherHistory(); // Refresh the weather history
+        alert('Record deleted successfully');
+      } catch (error) {
+        console.error('Error deleting record:', error);
+        alert('Failed to delete record. Please try again.');
+      }
+    }
+  };
+    
   return (
     <div className="app-container">
       <h1 className="app-title">Weather App</h1>
@@ -174,15 +231,26 @@ const App = () => {
               className="input-field"
             />
           </div>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="submit-button"
-            disabled={!location || !temperature}
-        >
-          {selectedEntry ? 'Update Temperature Data' : 'Add Temperature Data'}
-        </button>
+          <div className="button-group">
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              className="submit-button"
+              disabled={!location || !temperature}
+            >
+              {selectedEntry ? 'Update Temperature Data' : 'Add Temperature Data'}
+            </button>
 
+            {selectedEntry && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="cancel-button"
+              >
+                Cancel Update
+              </button>
+            )}
+          </div>
       
           <DateRangePicker
             ranges={dateRange}
@@ -191,9 +259,10 @@ const App = () => {
           />
 
           <button onClick={fetchWeatherHistory} className="history-button">
-             View Stored Weather History
+            {showRecords ? 'Hide Stored Weather History' : 'View Stored Weather History'}
           </button>
-        {weatherHistory.length > 0 && (
+
+        {weatherHistory.length > 0 && showRecords && (
           <div className="weather-history">
             <h3>Stored Weather History</h3>
             <table>
@@ -204,6 +273,7 @@ const App = () => {
                   <th>Start Date</th>
                   <th>End Date</th>
                   <th>Update Records</th>
+                  <th>Delete Records</th>
                 </tr>
               </thead>
               <tbody>
@@ -215,6 +285,9 @@ const App = () => {
                   <td>{new Date(entry.end_date).toLocaleDateString()}</td>
                   <td>
                     <button onClick={() => handleSelectEntry(entry)} className="update-button">Update</button>
+                  </td>
+                  <td>
+                    <button onClick={() => handleDelete(entry.id)} className="delete-button">Delete</button>
                   </td>
                 </tr>
               ))}
@@ -267,6 +340,7 @@ const App = () => {
                   src={getWeatherIconUrl(weatherDetails.weather[0].icon)} 
                   alt={weatherDetails.weather[0].description}
                   className="weather-icon"
+                  style={{ maxWidth: '100%', height: 'auto' }}
                 />
                 <span className="weather-description">
                   {weatherDetails.weather[0].description}
